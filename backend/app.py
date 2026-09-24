@@ -5,8 +5,7 @@ import psycopg2
 from flask import Flask, redirect, render_template, request, session, url_for
 from psycopg2.extras import RealDictCursor
 
-from rules import weigh
-from observer_pass import allow_write, show_form
+from rules import can_write, weigh
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "tea-cupping-dev-secret")
@@ -63,13 +62,13 @@ def home():
     with db() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("SELECT * FROM cuppings ORDER BY id DESC")
         rows = cur.fetchall()
-    return render_template("home.html", rows=rows, can_write=show_form(session.get("role")))
+    return render_template("home.html", rows=rows, can_write=can_write(session.get("role")))
 
 
 @app.post("/cuppings")
 @login_required
 def create():
-    if not allow_write(session.get("role")):
+    if not can_write(session.get("role")):
         return ("仅审评员可提交拼配审评", 403)
     aroma = float(request.form["aroma"])
     taste = float(request.form["taste"])

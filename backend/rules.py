@@ -1,3 +1,7 @@
+def can_write(role: str) -> bool:
+    return role == "writer"
+
+
 def weigh(aroma: float, taste: float, liquor: float) -> tuple[str, str, float]:
     score = round(aroma * 0.3 + taste * 0.5 + liquor * 0.2, 2)
     if score >= 7:
