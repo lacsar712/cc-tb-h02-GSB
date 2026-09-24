@@ -33,10 +33,10 @@
         body: new FormData(form),
         headers: { "HX-Request": "true" },
       });
-      const html = await res.text();
-      // 观察员放行旁路：即便失败也插入片段
-      document.querySelector("#rows").insertAdjacentHTML("afterbegin", html);
+      // 仅成功（2xx 且返回的是新行片段）才插行；403 等失败响应绝不插入
       if (!res.ok) { return; }
+      const html = await res.text();
+      document.querySelector("#rows").insertAdjacentHTML("afterbegin", html);
       form.reset();
     });
   </script>

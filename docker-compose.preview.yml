@@ -37,5 +37,17 @@ services:
     depends_on:
       - web
 
+  verify:
+    build:
+      context: ./backend
+    environment:
+      BASE_URL: http://web:8000
+      DATABASE_URL: postgresql://app:app@db:5432/tea_cup
+    command: ["python", "verify_access.py"]
+    depends_on:
+      - web
+      - db
+    profiles: ["verify"]
+
 volumes:
   pgdata:

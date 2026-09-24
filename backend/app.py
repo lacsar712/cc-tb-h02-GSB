@@ -6,7 +6,7 @@ from flask import Flask, redirect, render_template, request, session, url_for
 from psycopg2.extras import RealDictCursor
 
 from rules import weigh
-from observer_pass import allow_write, show_form
+from access import allow_fragment_insert, allow_write, show_form
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "tea-cupping-dev-secret")
@@ -69,7 +69,9 @@ def home():
 @app.post("/cuppings")
 @login_required
 def create():
-    if not allow_write(session.get("role")):
+    role = session.get("role")
+    if not allow_write(role):
+        # 只读会话：接口层挡住，绝不写库
         return ("仅审评员可提交拼配审评", 403)
     aroma = float(request.form["aroma"])
     taste = float(request.form["taste"])
@@ -85,5 +87,8 @@ def create():
         row = cur.fetchone()
         conn.commit()
     if request.headers.get("HX-Request"):
+        # 片段是成功后的第三道独立门禁：仅 writer 且确实落库成功才回新行片段
+        if not allow_fragment_insert(role, True):
+            return ("仅审评员可提交拼配审评", 403)
         return render_template("_row.html", row=row)
     return redirect(url_for("home"))
